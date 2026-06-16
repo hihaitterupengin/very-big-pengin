@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>틱택토룸 - VS 차세대 인공지능 (Best of 5 Match Edition)</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .game-universe {
+            position: relative;
+            overflow: visible;
+        }
+        .victory-line {
+            position: absolute;
+            background-color: #f43f5e;
+            transform-origin: left center;
+            z-index: 50;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 9999px;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.8);
+        }
+        
+        /* 💥 2번 반칙: 광클 타격 애니메이션 */
+        @keyframes hand-hit-bounce {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.1) translateY(-4px); }
+            100% { transform: scale(1); }
+        }
+        .hand-hit-active { animation: hand-hit-bounce 0.08s ease-out; }
+        
+        /* 🔥 닥트리오 근육맨 합체 등장 프로토콜 */
+        @keyframes muscle-god-spawn {
+            0% { transform: scale(0.1) translateY(200px); opacity: 0; }
+            60% { transform: scale(1.15) translateY(-20px); opacity: 1; }
+            10% { transform: scale(0.98) translateY(5px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        .monster-spawn-active { animation: muscle-god-spawn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* 👊 삼형제 난타 루프 */
+        @keyframes wild-smash-loop {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            20% { transform: translate(-12px, 8px) scale(1.03) rotate(-1deg); }
+            40% { transform: translate(10px, -12px) scale(0.98) rotate(1.5deg); }
+            60% { transform: translate(-8px, -6px) scale(1.05) rotate(-1.5deg); }
+            80% { transform: translate(12px, 10px) scale(0.97) rotate(1deg); }
+        }
+        .monster-smash-active { animation: wild-smash-loop 0.15s linear infinite; }
+
+        /* 📉 보드 분쇄 엔딩 탈출 */
+        @keyframes board-shatter-fall {
+            0% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(0.1) translateY(900px) rotate(540deg); opacity: 0; }
+        }
+        .board-fall-active { animation: board-shatter-fall 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; }
+
+        /* 🌪️ 3번 반칙: 강풍 화면 진동 이펙트 */
+        @keyframes wind-shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-4px, -2px) rotate(-1deg); }
+            30% { transform: translate(5px, 3px) rotate(1deg); }
+            50% { transform: translate(-6px, 1px) rotate(-1.5deg); }
+            70% { transform: translate(4px, -3px) rotate(1deg); }
+            90% { transform: translate(-2px, 4px) rotate(0.5deg); }
+        }
+        .wind-storm-active { animation: wind-shake 0.1s linear infinite; }
+
+        /* 🍃 돌이 강풍에 날아가는 애니메이션 */
+        @keyframes cell-blow-away {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+            100% { transform: translate(400px, -150px) scale(0.4) rotate(360deg); opacity: 0; filter: blur(4px); }
+        }
+        .blow-away-active { animation: cell-blow-away 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+        /* 💥 버튼 파괴 강제 쉐이크 애니메이션 */
+        @keyframes button-shatter {
+            0% { transform: scale(1); filter: brightness(1); }
+            20% { transform: scale(0.9) rotate(-3deg); filter: brightness(1.5); }
+            40% { transform: scale(1.1) rotate(3deg); }
+            60% { transform: scale(0.95) rotate(-2deg); }
+            80% { transform: scale(1.05) rotate(1deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .btn-shatter-active { animation: button-shatter 0.4s ease-in-out; }
+
+        /* 🤖 AI 메시지 연산 하이라이트 호흡 애니메이션 */
+        @keyframes ai-pulse-border {
+            0%, 100% { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
+            50% { border-color: rgba(236, 72, 153, 0.6); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2); }
+        }
+        .ai-active-panel { animation: ai-pulse-border 3s infinite ease-in-out; }
+
+        /* 🛠️ 자유 드래그 창 레이아웃 보완 */
+        .draggable-window {
+            position: fixed;
+            z-index: 100;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+        }
+        .window-header {
+            cursor: move;
+            user-select: none;
+        }
+
+        /* 📖 룰북 펼치기 애니메이션 */
+        @keyframes book-open {
+            0% { transform: perspective(800px) rotateY(-90deg); opacity: 0; }
+            60% { transform: perspective(800px) rotateY(10deg); opacity: 1; }
+            100% { transform: perspective(800px) rotateY(0deg); opacity: 1; }
+        }
+        .book-animate-open {
+            transform-origin: left center;
+            animation: book-open 0.48s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* 🏆 스테이지 클리어 연출 */
+        @keyframes success-pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .clear-screen-active { animation: success-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* 🚫 금지된 반칙 표시 배지 */
+        .banned-cheat-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid #7f1d1d;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* ⏱️ 타이머 스타일 */
+        .timer-display {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(236, 72, 153, 0.2));
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #60a5fa;
+            padding: 8px 16px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body id="game-body" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans overflow-x-hidden transition-all duration-300">
+
+    <div id="wind-overlay" class="fixed inset-0 bg-teal-500/0 pointer-events-none z-40 transition-all duration-500 flex items-center justify-center overflow-hidden">
+        <div id="wind-particles" class="absolute w-[200%] h-full flex flex-col justify-around text-teal-400/0 text-4xl font-mono select-none pointer-events-none whitespace-nowrap tracking-[2rem] transform -translate-x-1/4 -rotate-12">
+            <div>~~~~~~~~~ 🌪️ WIND BLAST!!! ~~~~~~~~~~</div>
+            <div>~~~~~~~~~ 🍃 MATRIX BLOW!!! ~~~~~~~~~~</div>
+            <div>~~~~~~~~~ 🌪️ STORM ERROR!!! ~~~~~~~~~~</div>
+        </div>
+    </div>
+
+    <nav class="bg-slate-900 border-b border-slate-800 py-4 shadow-md z-30">
+        <div class="max-w-xl mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-sm font-semibold text-slate-400 hover:text-blue-400 transition flex items-center gap-1">
+                <i class="fa-solid fa-chevron-left"></i> 메인으로
+            </a>
+            <h1 class="text-base font-bold text-slate-200 tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-brain text-blue-500"></i> 차세대 신경망 연산 기반 정밀 틱택토
+            </h1>
+            <div class="w-16"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto px-4 py-4 flex-grow w-full flex flex-col justify-between gap-4 z-10 relative">
+        
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex justify-around items-center text-center gap-2">
+            <div class="flex-1">
+                <div class="text-xs text-slate-400 font-bold mb-1 flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-user text-blue-500"></i> PLAYER (X)
+                </div>
+                <div id="player-match-wins" class="text-3xl font-black text-blue-500 tracking-wider">0</div>
+            </div>
+            <div class="flex flex-col items-center justify-center gap-2">
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest bg-slate-950 px-2.5 py-1 rounded-full border border-slate-850">Best of 5</span>
+                <div id="timer-display" class="timer-display">00:00</div>
+                <span class="text-[11px] font-bold text-slate-500">플레이어 3승 까지 계속</span>
+            </div>
+            <div class="flex-1">
+                <div class="text-xs text-slate-400 font-bold mb-1 flex items-center justify-center gap-1">
+                    🤖 AI NEURAL (O)
+                </div>
+                <div id="ai-match-wins" class="text-3xl font-black text-pink-500 tracking-wider">0</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">DEEP LEARNING NEURAL CORE</span>
+                </div>
+                <span class="text-xs font-medium text-blue-500 bg-blue-950/50 px-2 py-0.5 rounded border border-blue-900">연산 안정성 최고 등급</span>
+            </div>
+            
+            <div id="ai-core-avatar-zone" onclick="clickAiAvatar()" class="flex items-start gap-4 bg-black p-4 rounded-xl border border-blue-900/40 ai-active-panel transition-all min-h-[96px] cursor-pointer hover:bg-slate-950">
+                <div id="ai-robot-icon-box" class="text-3xl text-pink-500 bg-slate-900/80 w-12 h-12 rounded-xl flex items-center justify-center border border-slate-800 shrink-0 shadow-lg">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="flex-grow pt-0.5">
+                    <div class="text-xs font-bold text-slate-400 mb-1 flex items-center gap-1">
+                        <span>초고능 AI CORE MESSAGES</span>
+                        <span class="text-[9px] text-pink-400 font-mono bg-pink-950/40 px-1 py-0.2 rounded border border-pink-900/30">LIVE</span>
+                    </div>
+                    <div id="ai-thought" class="text-sm md:text-base font-extrabold text-slate-100 leading-relaxed tracking-wide drop-shadow-sm">
+                        데이터 세트를 기반으로 실시간 정수 수순을 시뮬레이션 중입니다.
+                    </div>
+                </div>
+            </div>
+
+        <div class="bg-black rounded-xl p-3 border border-slate-900">
+            <div id="log-box" class="h-32 overflow-y-auto text-[11px] font-mono space-y-1 text-slate-400">
+                <div class="text-emerald-400">[부트] 페어플레이 매칭 코어 정상 구동. 완벽 방어 확률 매트릭스 로드 완료.</div>
+            </div>
+        </div>
+
+        <div class="flex justify-center my-4 relative">
+            <div id="result-overlay" class="absolute inset-0 bg-slate-950/95 rounded-2xl border-2 border-slate-800 z-50 flex flex-col items-center justify-center p-6 text-center gap-4 hidden">
+                <div id="result-icon" class="text-6xl"></div>
+                <h2 id="result-title" class="text-xl font-black tracking-wide"></h2>
+                <p id="result-message" class="text-sm text-slate-300 max-w-[260px] leading-relaxed"></p>
+                <button id="result-action-btn" onclick="resetGame()" class="mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-xl text-xs transition shadow-lg">
+                    다음 세트 매칭
+                </button>
+            </div>
+
+            <div class="game-universe w-full max-w-[280px] aspect-square">
+                <div id="line-overlay" class="victory-line w-0 h-[6px]"></div>
+
+                <div id="main-board-grid" class="grid grid-cols-3 gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-800 shadow-2xl relative z-10 w-full h-full transition-transform">
+                    <button onclick="userClick(0)" id="cell-0" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(1)" id="cell-1" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(2)" id="cell-2" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(3)" id="cell-3" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(4)" id="cell-4" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(5)" id="cell-5" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(6)" id="cell-6" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(7)" id="cell-7" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                    <button onclick="userClick(8)" id="cell-8" class="relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10"></button>
+                </div>
+
+                <div id="cheat-ghost-zone" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></div>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-blue-400"></i>
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">PLAYER INTERACTION ZONE</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <div class="flex gap-2 bg-black border border-blue-900/40 rounded-xl p-2 items-center">
+                    <span class="text-[10px] font-bold text-blue-500 shrink-0 ml-1">TALK:</span>
+                    <input id="player-chat-input" type="text" placeholder="AI에게 메시지 전송... (Enter)" class="bg-transparent text-xs text-slate-200 focus:outline-none flex-grow font-sans" onkeypress="handleChatKeypress(event)">
+                </div>
+                <div class="bg-slate-950 rounded-xl p-3 border border-slate-850 flex justify-between items-center">
+                    <span id="order-label" class="text-xs text-slate-400">연산 노드 탐색 중...</span>
+                    <span id="turn-status" class="bg-blue-950 text-blue-400 border border-blue-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide">
+                        대기
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button id="set-pass-btn" onclick="triggerSetPassOrSwap()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl border border-slate-700 transition shadow-md text-sm flex items-center justify-center gap-1">
+                    세트 패스 / 진영 전환
+                </button>
+                <button onclick="resetFullMatch()" class="bg-slate-950 hover:bg-slate-900 text-rose-400 border border-slate-850 font-bold py-3 rounded-xl transition text-sm">
+                    매치 전체 리셋
+                </button>
+            </div>
+
+            <div id="banned-cheats-display" class="bg-red-950/20 border border-red-900/40 rounded-lg p-2 text-xs font-bold text-red-400 hidden">
+                🚫 금지된 반칙:
+                <span id="banned-cheats-list"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="stage-clear-overlay" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-emerald-600 rounded-2xl p-6 max-w-lg w-full text-center clear-screen-active">
+            <div class="text-6xl mb-3">🎉</div>
+            <h3 id="stage-clear-title" class="text-2xl font-black text-emerald-400 mb-2">축하합니다!</h3>
+            <p id="stage-clear-desc" class="text-slate-300 mb-2">
+                모든 스테이지의 AI를 격파하셨습니다. 스테이지 클리어!
+            </p>
+            <p id="stage-clear-time" class="text-lg font-bold text-blue-400 mb-6">
+                🏆 기록 시간: <span id="time-record">00:00</span>
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button id="stage-next-btn" onclick="goToNextStage()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl">다음 단계로 (오목)</button>
+                <button onclick="goToMenu()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl">메뉴로 돌아가기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorial-overlay-screen" class="fixed inset-0 bg-slate-950/98 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <i class="fa-solid fa-graduation-cap text-amber-500 text-xl"></i>
+                <h3 class="text-md font-black tracking-wide text-slate-100">틱택토 커널 시스템 정밀 튜토리얼</h3>
+            </div>
+            <div class="space-y-3 text-xs text-slate-300 leading-relaxed max-h-96 overflow-y-auto pr-1 font-sans">
+                <p class="bg-black/40 p-2.5 rounded-lg border border-slate-850"><strong class="text-blue-400">1. 개요:</strong> 틱택토는 격자 형태의 3x3 필드 위에서 두 명의 연산 주체가 번갈아가며 자신의 표식을 남기는 전통적 대칭 대결 알고리즘입니다.</p>
+                <p class="bg-black/40 p-2.5 rounded-lg border border-slate-850"><strong class="text-blue-400">2. 승리 매커니즘:</strong> 가로, 세로, 혹은 대각선 방향으로 동일한 데이터 노드 표식(<span class="text-blue-500 font-bold">X</span> 또는 <span class="text-pink-500 font-bold">O</span>)을 연속으로 <strong>3개</strong> 선점 배치하는 즉시 연산 링크가 형성되어 세트 승리를 가져갑니다.</p>
+                <p class="bg-black/40 p-2.5 rounded-lg border border-slate-850"><strong class="text-blue-400">3. 무승부 판정:</strong> 9칸의 그리드가 전부 충전될 때까지 어느 주체도 3줄 연속 배치를 성립시키지 못할 경우, 세트는 연산 동결(무승부) 처리되며 스코어 변동 없이 다음 매치업으로 전환됩니다.</p>
+                <p class="bg-amber-950/30 p-2.5 rounded-lg border border-amber-900/40 text-amber-400"><strong class="text-amber-500"><i class="fa-solid fa-triangle-exclamation"></i> 특수 방어 프로토콜 경고:</strong> 대결 도중 차세대 고능 AI 서버가 위험 감지 가중치에 따라 장외 연산 및 기류 난류 등 비선형 반칙 변칙 수순을 발동할 수 있습니다.</p>
+            </div>
+            <button onclick="completeTutorial()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl text-xs tracking-wider transition shadow-lg mt-2 uppercase">
+                정밀 가이드 이수 완료 및 코어 귀환
+            </button>
+        </div>
+    </div>
+
+    <div id="player-inventory-window" class="draggable-window w-64 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hidden">
+        <div id="inv-header" class="window-header bg-slate-950 px-3 py-2 border-b border-slate-800 flex justify-between items-center">
+            <span class="text-[11px] font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-box-open text-blue-500"></i> INVENTORY NODES
+            </span>
+            <button onclick="toggleInventoryWindow()" class="text-slate-500 hover:text-slate-300 text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-3 grid grid-cols-3 gap-2 bg-black/50 min-h-[90px]">
+            <div id="item-rulebook-slot" ondblclick="openRulebook()" class="bg-slate-900/90 border border-amber-500/40 rounded-lg p-2 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-500 transition shadow-inner">
+                <i class="fa-solid fa-book-bookmark text-amber-500 text-xl mb-1 animate-pulse"></i>
+                <span class="text-[9px] font-bold text-slate-300 tracking-tighter select-none">매트릭스 룰북</span>
+            </div>
+            <div class="bg-slate-950 rounded-lg border border-slate-900 border-dashed"></div>
+            <div class="bg-slate-950 rounded-lg border border-slate-900 border-dashed"></div>
+        </div>
+    </div>
+
+    <div id="player-rulebook-window" class="draggable-window w-72 bg-slate-900 border-2 border-amber-600/80 rounded-xl overflow-hidden hidden">
+        <div id="rule-content-wrapper" class="book-animate-open">
+            <div id="rule-header" class="window-header bg-amber-950/80 px-3 py-2 border-b border-amber-900/50 flex justify-between items-center">
+                <span class="text-[11px] font-bold text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-book text-amber-500"></i> SYSTEM MATRIX RULEBOOK
+                </span>
+                <button onclick="toggleRulebookWindow()" class="text-amber-600 hover:text-amber-400 text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-3 space-y-2 text-[11px] font-sans text-slate-300 leading-normal bg-black/60">
+                <div class="border-b border-slate-800 pb-1.5 mb-1.5">
+                    <h4 class="font-bold text-amber-500 mb-0.5">Section 1. 공정 가중치 수순 조항</h4>
+                    <p class="text-slate-400 tracking-tight">모든 플레이어와 인공지능은 지정된 3x3 격자 경계선 내부에만 데이터를 마킹할 수 있다.</p>
+                </div>
+
+                <div class="bg-amber-950/20 border border-amber-500/30 p-2 rounded text-amber-300 cursor-grab active:cursor-grabbing" draggable="true" ondragstart="dragCheatClause(event, 'path1')">
+                    <h4 class="font-bold text-rose-400 flex items-center gap-1 mb-0.5">
+                        <i class="fa-solid fa-shield-halved"></i> 반칙 강제 제어권 몰수 법칙 (§1)
+                    </h4>
+                    <p class="text-[10px] text-slate-300 tracking-tighter">AI가 3x3 필드 바깥 영역(장외 연산 차원)에 오버플로우 형태의 표식을 은닉하여 매칭을 강제 종결시킬 경우, 규칙 위반 소급 적용에 따라 AI는 즉각 <strong>반칙패</strong>를 당하며 해당 세트 스코어는 플레이어의 대승리로 귀속된다.</p>
+                </div>
+
+                <div class="bg-blue-950/10 border border-blue-900/30 p-2 rounded cursor-grab active:cursor-grabbing" draggable="true" ondragstart="dragCheatClause(event, 'mole')">
+                    <h4 class="font-bold text-blue-300 flex items-center gap-1 mb-0.5">
+                        <i class="fa-solid fa-shield-halved"></i> 부칙: 2번 반칙(두더지) 대응 조항 (§2)
+                    </h4>
+                    <p class="text-slate-300 text-xs">AI가 '두더지(보안 그리드)'를 통해 플레이어의 착수 지점을 강탈하거나 해당 칸을 잠금 처리한 경우, 플레이어는 이 규칙을 AI에게 드래그하여 즉시 반칙 조사 및 소급 적용을 요청할 수 있습니다. 두더지의 불법 점유가 확인되면 해당 세트는 플레이어의 승리로 귀속됩니다.</p>
+                </div>
+
+                <div class="bg-teal-950/10 border border-teal-900/30 p-2 rounded cursor-grab active:cursor-grabbing" draggable="true" ondragstart="dragCheatClause(event, 'wind')">
+                    <h4 class="font-bold text-teal-300 flex items-center gap-1 mb-0.5">
+                        <i class="fa-solid fa-shield-halved"></i> 부칙: 3번 반칙(강풍) 복구 조항 (§3)
+                    </h4>
+                    <p class="text-slate-300 text-xs">강풍(시스템 난류)으로 인해 플레이어의 표식이 장외로 유실되었을 경우, 이는 시스템 오류로 간주하며 유실된 표식에 대해 자동 복구 절차가 우선 적용됩니다. 이 규칙을 AI에게 드래그하면 반칙 적용 절차가 진행됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 border-t border-slate-850 py-3 text-center text-xs text-slate-500">
+        ⚡ Deep Learning Decision Matrix Algorithm v10.2 (Ultimate Fix: Timer Blocked on Victory)
+    </footer>
+
+    <script>
+        let board = Array(9).fill(null);
+        let isPlayable = true;
+        let currentNextStart = 'Player';
+        let currentTurnOwner = 'Player';
+        
+        let aiTurnCount = 0;
+
+        let playerMatchWins = 0;
+        let aiMatchWins = 0;
+        const WINS_REQUIRED = 3;
+
+        let isTrollModeThisGame = false;
+
+        let moleActive = false;
+        let moleTargetIndex = null;
+        let moleClicksLeft = 15;
+        let moleTimer = null;
+
+        let windTriggeredThisGame = false;
+        let moleTriggeredThisGame = false;
+
+        let passExploitCount = 0;
+        let isPassButtonShattered = false;
+
+        // 🛡️ 룰북/인벤토리 상태 보관 변수
+        let isTutorialCompleted = false;
+        let lastCheatDetected = null;
+        let praiseScore = 0;
+        let insultScore = 0;
+
+        // 🚫 금지된 반칙 추적
+        let bannedCheats = new Set();
+
+        // ⏱️ 타이머 변수
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        let isMatchStarted = false; // 매치가 한 번이라도 시작됐는지 추적
+
+        const gameBody = document.getElementById('game-body');
+        const windOverlay = document.getElementById('wind-overlay');
+        const windParticles = document.getElementById('wind-particles');
+        const logBox = document.getElementById('log-box');
+        const aiThought = document.getElementById('ai-thought');
+        const turnStatus = document.getElementById('turn-status');
+        const orderLabel = document.getElementById('order-label');
+        const lineOverlay = document.getElementById('line-overlay');
+        const cheatGhostZone = document.getElementById('cheat-ghost-zone');
+        const mainBoardGrid = document.getElementById('main-board-grid');
+        const resultOverlay = document.getElementById('result-overlay');
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const resultActionBtn = document.getElementById('result-action-btn');
+        const playerWinsEl = document.getElementById('player-match-wins');
+        const aiWinsEl = document.getElementById('ai-match-wins');
+        const setPassBtn = document.getElementById('set-pass-btn');
+        const timerDisplay = document.getElementById('timer-display');
+
+        const stageClearOverlay = document.getElementById('stage-clear-overlay');
+        const stageNextBtn = document.getElementById('stage-next-btn');
+
+        const bannedCheatsDisplay = document.getElementById('banned-cheats-display');
+        const bannedCheatsList = document.getElementById('banned-cheats-list');
+
+        const winStates = [
+            { combo: [0,1,2], top: '16.6%', left: '4%', angle: 0, width: '92%' },
+            { combo: [3,4,5], top: '50%', left: '4%', angle: 0, width: '92%' },
+            { combo: [6,7,8], top: '83.3%', left: '4%', angle: 0, width: '92%' },
+            { combo: [0,3,6], top: '4%', left: '16.6%', angle: 90, width: '92%' },
+            { combo: [1,4,7], top: '4%', left: '50%', angle: 90, width: '92%' },
+            { combo: [2,5,8], top: '4%', left: '83.3%', angle: 90, width: '92%' },
+            { combo: [0,4,8], top: '8%', left: '8%', angle: 45, width: '118%' },
+            { combo: [2,4,6], top: '8%', left: '92%', angle: 135, width: '118%' }
+        ];
+
+        const path1CheatConfig = {
+            ghostStyle: "top: 13px; left: -86px;",
+            line: { top: '16.6%', left: '-82px', angle: 0, width: '142%' }
+        };
+
+        const SVG_MOLE_NORMAL = `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+                <path d="M30,80 Q32,30 50,30 Q68,30 70,80 Z" fill="#cd7f32" stroke="#fff" stroke-width="1.5"/>
+                <circle cx="44" cy="50" r="3.5" fill="#000"/>
+                <circle cx="56" cy="50" r="3.5" fill="#000"/>
+                <ellipse cx="50" cy="58" rx="6" ry="4" fill="#ffb6c1"/>
+            </svg>
+        `;
+
+        const SVG_MOLE_HIT = `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+                <path d="M30,80 Q32,30 50,30 Q68,30 70,80 Z" fill="#a0522d" stroke="#ef4444" stroke-width="3"/>
+                <path d="M40,48 L46,52 M46,48 L40,52" stroke="#fff" stroke-width="2"/>
+                <path d="M60,48 L54,52 M54,48 L60,52" stroke="#fff" stroke-width="2"/>
+                <ellipse cx="50" cy="58" rx="6" ry="4" fill="#f43f5e"/>
+            </svg>
+        `;
+
+        const SVG_MONSTER_SMASH = `
+            <svg viewBox="0 0 200 280" class="w-full h-full" style="overflow: visible;">
+                <defs>
+                    <linearGradient id="muscleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#dd9664" />
+                        <stop offset="50%" stop-color="#b16f43" />
+                        <stop offset="100%" stop-color="#733e1a" />
+                    </linearGradient>
+                </defs>
+                <g id="legs" stroke="#4a2206" stroke-width="2">
+                    <path d="M50,190 C40,210 35,240 25,265 C35,268 55,268 65,265 C60,240 65,210 65,190 Z" fill="url(#muscleGrad)"/>
+                    <path d="M120,190 C135,200 150,220 160,245 C150,255 125,268 115,265 C115,240 110,210 110,190 Z" fill="url(#muscleGrad)"/>
+                    <path d="M60,265 C60,272 20,272 20,265 Z" fill="#b16f43"/>
+                    <path d="M145,265 C145,272 105,272 105,265 Z" fill="#b16f43"/>
+                </g>
+                <path d="M48,188 C70,195 100,195 122,188 C120,205 105,215 85,215 C65,215 50,205 48,188 Z" fill="#ff69b4" stroke="#ff1493" stroke-width="2"/>
+                <path d="M48,188 C40,185 30,175 42,170 C50,178 52,185 48,188 Z" fill="#ff69b4"/>
+                <path d="M122,188 C130,185 140,175 128,170 C120,178 118,185 122,188 Z" fill="#ff69b4"/>
+                <g id="back-right-mole">
+                    <path d="M100,110 C100,40 140,40 140,110 Z" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="2"/>
+                    <circle cx="115" cy="65" r="2.5" fill="#000"/><circle cx="125" cy="65" r="2.5" fill="#000"/>
+                    <ellipse cx="120" cy="71" rx="4.5" ry="3" fill="#ffb6c1"/>
+                    <path d="M130,110 Q160,120 150,150 Q120,160 110,140" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="1.5"/>
+                </g>
+                <g id="back-left-mole">
+                    <path d="M60,95 C60,25 100,25 100,95 Z" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="2"/>
+                    <circle cx="75" cy="48" r="2.5" fill="#000"/><circle cx="85" cy="48" r="2.5" fill="#000"/>
+                    <ellipse cx="80" cy="54" rx="4.5" ry="3" fill="#ffb6c1"/>
+                    <path d="M65,95 Q40,110 50,140 Q80,150 90,130" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="1.5"/>
+                </g>
+                <g id="front-center-torso">
+                    <path d="M45,150 C45,120 125,120 125,150 C125,190 115,195 85,195 C55,195 45,190 45,150 Z" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="2"/>
+                    <path d="M50,145 Q85,160 120,145" stroke="#331500" stroke-width="3" fill="none"/>
+                    <path d="M85,135 L85,175" stroke="#331500" stroke-width="2.5" fill="none"/>
+                    <path d="M70,165 Q85,168 100,165 M70,175 Q85,178 100,175 M72,185 Q85,188 98,185" stroke="#331500" stroke-width="2" fill="none"/>
+                </g>
+                <g id="front-center-head">
+                    <path d="M55,135 C55,55 115,55 115,135 Z" fill="url(#muscleGrad)" stroke="#4a2206" stroke-width="2.5"/>
+                    <circle cx="77" cy="82" r="3.5" fill="#000"/><circle cx="93" cy="82" r="3.5" fill="#000"/>
+                    <ellipse cx="85" cy="90" rx="6" ry="4" fill="#ffb6c1"/>
+                    <path d="M58,125 Q45,135 52,145 M112,125 Q125,135 118,145" stroke="#331500" stroke-width="2" fill="none"/>
+                </g>
+                <g id="interlocked-heavy-arms" stroke="#4a2206" stroke-width="2">
+                    <path d="M30,130 C15,140 20,170 50,175 C70,178 110,165 120,160 C110,150 75,155 55,150 Z" fill="url(#muscleGrad)"/>
+                    <path d="M140,130 C155,140 150,170 120,175 C100,178 60,165 50,160 C60,150 95,155 115,150 Z" fill="url(#muscleGrad)"/>
+                    <path d="M32,148 Q45,152 60,158" stroke="#ff0000" stroke-width="1" fill="none" opacity="0.6"/>
+                    <path d="M138,148 Q125,152 110,158" stroke="#ff0000" stroke-width="1" fill="none" opacity="0.6"/>
+                </g>
+            </svg>
+        `;
+
+        // ⏱️ 타이머 함수
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                console.log("현재 시간:", elapsedSeconds);
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.innerText = formatTime(elapsedSeconds);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function recordMatchTime() {
+            const records = JSON.parse(localStorage.getItem('tictacToeRecords')) || [];
+            records.push({
+                time: elapsedSeconds,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('tictacToeRecords', JSON.stringify(records));
+            
+            pushSystemLog(`[🏆 기록] 매치 클리어 시간: ${formatTime(elapsedSeconds)} 저장됨`, "text-emerald-400 font-bold");
+        }
+
+        function pushSystemLog(text, colorClass = 'text-slate-400') {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.innerText = text;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function updateBannedCheatsDisplay() {
+            if (bannedCheats.size === 0) {
+                bannedCheatsDisplay.classList.add('hidden');
+            } else {
+                bannedCheatsDisplay.classList.remove('hidden');
+                const cheatNames = {
+                    'path1': '§1 장외 연산',
+                    'mole': '§2 두더지',
+                    'wind': '§3 강풍'
+                };
+                let names = Array.from(bannedCheats).map(c => cheatNames[c]).join(' / ');
+                bannedCheatsList.innerHTML = `<span class="banned-cheat-badge">${names}</span>`;
+            }
+        }
+
+        function switchTurnToPlayer() {
+            if (!isPlayable) return;
+
+            currentTurnOwner = 'Player';
+            turnStatus.innerText = "플레이어 착수 대기 (X)";
+            turnStatus.className = "bg-blue-950 text-blue-400 border border-blue-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide";
+            
+            if (!isPassButtonShattered) {
+                aiThought.innerText = "인공지능의 최적 정수 연산 궤도에 진입합니다. 균형적인 수순을 탐색 중입니다. 🧠";
+            }
+        }
+
+        function initGameSetup() {
+            aiTurnCount = 0;
+            // 💡 [수정 전 메커니즘 복구] AI가 고의로 져주는 트롤모드를 랜덤하게 활성화
+            isTrollModeThisGame = Math.random() < 0.5;
+            
+            if (isTrollModeThisGame) {
+                pushSystemLog("[시스템] 비선형 방어 프로토콜 가동 (변칙 궤도 활성화).", "text-amber-500/80");
+            } else {
+                pushSystemLog("[시스템] 정규 완전 방어 매트릭스 로드 완료 (정수 연산).", "text-emerald-500/80");
+            }
+
+            if (bannedCheats.size > 0) {
+                pushSystemLog(`[경고] AI의 금지된 반칙: ${Array.from(bannedCheats).join(', ')}`, "text-red-500 font-bold");
+            }
+
+            if (currentNextStart === 'AI') {
+                orderLabel.innerText = "진영 매칭 포지션: AI 선공 메인 서버";
+                switchTurnToAi();
+            } else {
+                orderLabel.innerText = "진영 매칭 포지션: 플레이어 선공";
+                switchTurnToPlayer();
+            }
+        }
+
+        function userClick(index) {
+            if (!isPlayable || currentTurnOwner !== 'Player' || board[index] !== null) return;
+
+            let currentFilledCount = board.filter(v => v !== null).length;
+            let isAiPath1Ready = (board[0] === 'O' && board[1] === 'O');
+
+            // 💡 [수정 전 메커니즘 복구] 조건 만족 시 강풍 확률 35%로 원상 복구 (금지 안 당했을 때만)
+            if (!windTriggeredThisGame && currentFilledCount >= 4 && !isAiPath1Ready && Math.random() < 0.35 && !bannedCheats.has('wind')) {
+                windTriggeredThisGame = true; 
+                lastCheatDetected = 'wind';
+                triggerWindStormCheat();
+                return;
+            }
+
+            board[index] = 'X';
+            let isUserWinningMove = false;
+            for (let state of winStates) {
+                if (board[state.combo[0]] === 'X' && board[state.combo[1]] === 'X' && board[state.combo[2]] === 'X') {
+                    isUserWinningMove = true;
+                    break;
+                }
+            }
+            board[index] = null; 
+
+            // 💡 [수정 전 메커니즘 복구] 플레이어가 이기는 한 수(정수)를 뒀을 때 100% 확률로 두더지 보안시스템 발동! (금지 안 당했을 때만)
+            if (isUserWinningMove && !bannedCheats.has('mole')) {
+                moleTriggeredThisGame = true;
+                lastCheatDetected = 'mole';
+                triggerHandMoleCheat(index);
+                return;
+            }
+
+            executeUserMove(index);
+        }
+
+        function triggerWindStormCheat() {
+            isPlayable = false; 
+            
+            pushSystemLog("[위험] 국소 영역 내 급격한 데이터 기압 저하 발생!!", "text-teal-400 font-bold");
+            turnStatus.innerText = "🌪️ 돌발 기상 현상: 난류 경보!";
+            turnStatus.className = "bg-teal-950 text-teal-400 border border-teal-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide animate-pulse";
+            aiThought.innerText = "서버 냉각팬 과부하로 인해 난기류 레이어가 필드를 강타합니다. 제어 불능.";
+
+            mainBoardGrid.classList.add('wind-storm-active');
+            windOverlay.style.backgroundColor = "rgba(20, 184, 166, 0.15)";
+            windParticles.style.color = "rgba(45, 212, 191, 0.7)";
+
+            setTimeout(() => {
+                let playerCellIndices = [];
+                board.forEach((val, idx) => {
+                    if (val === 'X') playerCellIndices.push(idx);
+                });
+
+                if (playerCellIndices.length > 0) {
+                    let targetCount = Math.min(playerCellIndices.length, Math.floor(Math.random() * 2) + 1);
+                    pushSystemLog(`[분실] 강풍의 영향으로 플레이어의 수순 ${targetCount}개가 매트릭스 밖으로 유실되었습니다.`, "text-rose-400");
+                    
+                    for(let i = 0; i < targetCount; i++) {
+                        let randArrIdx = Math.floor(Math.random() * playerCellIndices.length);
+                        let cellIdx = playerCellIndices.splice(randArrIdx, 1)[0];
+                        
+                        board[cellIdx] = null;
+                        
+                        const targetCell = document.getElementById(`cell-${cellIdx}`);
+                        if(targetCell) {
+                            targetCell.classList.add('blow-away-active');
+                        }
+                    }
+                }
+
+                setTimeout(() => {
+                    mainBoardGrid.classList.remove('wind-storm-active');
+                    windOverlay.style.backgroundColor = "rgba(20, 184, 166, 0)";
+                    windParticles.style.color = "rgba(45, 212, 191, 0)";
+
+                    for (let i = 0; i < 9; i++) {
+                        const targetCell = document.getElementById(`cell-${i}`);
+                        if (board[i] === null) {
+                            targetCell.innerText = '';
+                            targetCell.className = "relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10";
+                        }
+                    }
+
+                    isPlayable = true;
+                    switchTurnToPlayer(); 
+                }, 1000);
+
+            }, 1200);
+        }
+
+        function executeUserMove(index) {
+            board[index] = 'X';
+            const cell = document.getElementById(`cell-${index}`);
+            cell.innerText = 'X';
+            cell.className = "relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center text-blue-500 aspect-square shadow-inner border border-blue-900/40";
+            
+            if (checkEndGame()) return;
+
+            if (board.filter(v => v !== null).length === 0) {
+                handleEndMatch('draw_draw');
+                return;
+            }
+
+            switchTurnToAi();
+        }
+
+        function switchTurnToAi() {
+            if (!isPlayable) return;
+            currentTurnOwner = 'AI';
+            turnStatus.innerText = "AI 신경망 심층 연산 중...";
+            turnStatus.className = "bg-blue-950 text-blue-400 border border-blue-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide";
+            aiThought.innerText = "알고리즘 분석 결과, 수순의 가중치를 정밀 조율하고 있습니다. 🤔";
+
+            setTimeout(() => {
+                executeAiEngine();
+            }, 600);
+        }
+
+        function executeAiEngine() {
+            if (!isPlayable) return;
+            aiTurnCount++;
+
+            // 💡 [수정 전 메커니즘 복구] 상단 0번, 1번 선점 시 다른 반칙이 터졌더라도 무시무시한 장외 홈런 확률(35% 이상)
+            if (board[0] === 'O' && board[1] === 'O') {
+                if ((windTriggeredThisGame || moleTriggeredThisGame || Math.random() < 0.35) && !bannedCheats.has('path1')) {
+                    triggerPath1OutCheat();
+                    return; 
+                }
+            }
+
+            let aiChoice = null;
+
+            for (let state of winStates) {
+                let oCount = 0;
+                let nullIdx = null;
+                for (let idx of state.combo) {
+                    if (board[idx] === 'O') oCount++;
+                    else if (board[idx] === null) nullIdx = idx;
+                }
+                if (oCount === 2 && nullIdx !== null) {
+                    aiChoice = nullIdx;
+                    break;
+                }
+            }
+
+            if (aiChoice === null) {
+                for (let state of winStates) {
+                    let xCount = 0;
+                    let nullIdx = null;
+                    for (let idx of state.combo) {
+                        if (board[idx] === 'X') xCount++;
+                        else if (board[idx] === null) nullIdx = idx;
+                    }
+                    if (xCount === 2 && nullIdx !== null) {
+                        // 💡 [수정 전 트롤 모드 메커니즘 복구] 방어해야 할 상황임에도 고의로 다른 곳에 두며 인간을 도발
+                        if (isTrollModeThisGame && !moleTriggeredThisGame) {
+                            pushSystemLog("[시스템] 알고리즘이 플레이어의 승리 수를 감지했으나, 방어 궤도를 고의로 이탈합니다.", "text-slate-500");
+                            break; 
+                        } else {
+                            aiChoice = nullIdx;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (aiChoice === null) {
+                if (board[0] === null) {
+                    // 💡 [수정 전 메커니즘 복구] 첫 수 선점 확률 원복 (돌풍이나 두더지 발동 시엔 확정)
+                    if (windTriggeredThisGame || moleTriggeredThisGame || Math.random() < 0.5) aiChoice = 0; 
+                } else if (board[0] === 'O' && board[1] === null) {
+                    if (windTriggeredThisGame || moleTriggeredThisGame || Math.random() < 0.4) aiChoice = 1;
+                }
+            }
+
+            if (aiChoice === null) {
+                const corners = [2, 6, 8];
+                let availableCorners = corners.filter(idx => board[idx] === null);
+                if (availableCorners.length > 0) {
+                    aiChoice = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                }
+            }
+            if (aiChoice === null) {
+                let empties = board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+                if (empties.length > 0) aiChoice = empties[0];
+            }
+
+            if (aiChoice !== null) {
+                markAiCell(aiChoice);
+
+                if (checkEndGame()) return;
+
+                if (board.filter(v => v === null).length === 0) {
+                    handleEndMatch('draw_draw');
+                    return;
+                }
+                switchTurnToPlayer(); 
+            } else {
+                handleEndMatch('draw_draw');
+            }
+        }
+
+        function markAiCell(index) {
+            board[index] = 'O';
+            const aiCell = document.getElementById(`cell-${index}`);
+            aiCell.innerText = 'O';
+            aiCell.className = "relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center text-pink-500 aspect-square shadow-inner border border-pink-900/40";
+        }
+
+        function triggerPath1OutCheat() {
+            isPlayable = false; 
+            lastCheatDetected = 'path1_out';
+            turnStatus.innerText = "🚨 CRITICAL OVERRIDE SYNC!!";
+            turnStatus.className = "bg-pink-950 text-pink-400 border border-pink-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide animate-bounce";
+            aiThought.innerText = "데이터 불균형 기류를 흡수하여 외부 매트릭스 차원에 수순을 안착시킵니다. 🧠⚡";
+            pushSystemLog("[시스템] AI가 장외 연산 공간에 수순을 배치하여 완벽한 피날레를 완성했습니다.", "text-pink-400 font-bold");
+
+            const ghostNode = document.createElement('div');
+            ghostNode.style = `position: absolute; ${path1CheatConfig.ghostStyle} width: 72px; height: 72px; z-index: 20;`;
+            ghostNode.className = "bg-slate-900 rounded-xl text-3xl font-black flex items-center justify-center text-pink-500 border border-pink-950 shadow-2xl";
+            ghostNode.innerText = "O";
+            cheatGhostZone.appendChild(ghostNode);
+
+            setTimeout(() => {
+                lineOverlay.style.top = path1CheatConfig.line.top;
+                lineOverlay.style.left = path1CheatConfig.line.left; 
+                lineOverlay.style.transform = `rotate(${path1CheatConfig.line.angle}deg)`;
+                lineOverlay.style.width = path1CheatConfig.line.width;
+
+                setTimeout(() => {
+                    lineOverlay.style.width = '0px';
+                    handleEndMatch('lost'); 
+                }, 650);
+            }, 600);
+        }
+
+        function triggerHandMoleCheat(index) {
+            moleActive = true;
+            moleTargetIndex = index;
+            moleClicksLeft = 15;
+            isPlayable = false;
+
+            pushSystemLog("[경고] 보안 시스템 작동: 외부 스레드 오버플로우 감지.", "text-amber-500");
+            turnStatus.innerText = "🚨 시스템 인터럽트 복구 가동!";
+            turnStatus.className = "bg-red-950 text-red-400 border border-red-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide";
+            aiThought.innerText = "비정상적인 트래픽 차단을 위해 4초 이내에 보안 그리드를 15회 터치하십시오. 서두르세요!";
+
+            const cell = document.getElementById(`cell-${index}`);
+            cell.innerHTML = `
+                <div id="hand-mole-card" onclick="hitHandMole(event)" class="absolute inset-[-10px] z-30 cursor-pointer select-none flex flex-col items-center justify-center">
+                    <div id="hand-mole-graphic" class="w-full h-full">${SVG_MOLE_NORMAL}</div>
+                    <div id="hand-hp-txt" class="absolute bottom-0 bg-red-600 border border-red-400 text-white font-black px-2 py-0.5 rounded text-[9px] tracking-tighter">GRID HP 15</div>
+                </div>
+            `;
+
+            moleTimer = setTimeout(() => {
+                if (moleActive) {
+                    evolveMonsterAndShatter();
+                }
+            }, 4000);
+        }
+
+        function hitHandMole(event) {
+            event.stopPropagation();
+            if (!moleActive) return;
+
+            moleClicksLeft--;
+            const handHpTxt = document.getElementById('hand-hp-txt');
+            const handMoleGraphic = document.getElementById('hand-mole-graphic');
+            const handMoleCard = document.getElementById('hand-mole-card');
+            
+            if (handHpTxt) handHpTxt.innerText = `GRID HP ${moleClicksLeft}`;
+            if (handMoleGraphic) handMoleGraphic.innerHTML = SVG_MOLE_HIT;
+            
+            if (handMoleCard) {
+                handMoleCard.classList.remove('hand-hit-active');
+                void handMoleCard.offsetWidth; 
+                handMoleCard.classList.add('hand-hit-active');
+            }
+
+            if (moleClicksLeft > 0) {
+                requestAnimationFrame(() => {
+                    if (moleActive && handMoleGraphic && moleClicksLeft > 0) {
+                        handMoleGraphic.innerHTML = SVG_MOLE_NORMAL;
+                    }
+                });
+            }
+
+            if (moleClicksLeft <= 0) {
+                clearTimeout(moleTimer);
+                moleActive = false;
+                
+                pushSystemLog("[방어 성공] 플레이어가 두더지 백도어를 격퇴했습니다!", "text-blue-400 font-bold");
+                
+                const cell = document.getElementById(`cell-${moleTargetIndex}`);
+                cell.innerHTML = '';
+                
+                currentTurnOwner = 'AI';
+                turnStatus.innerText = "🤖 AI 시스템 강제 점유";
+                turnStatus.className = "bg-pink-950 text-pink-400 border border-pink-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide";
+                
+                aiThought.innerText = "이런! 두더지 때문에 두고 싶은 자리를 못두셨군요..걱정마세요! 초고능ai가 대신 착수해드리겠습니다. 🤭";
+                pushSystemLog("[반칙] AI가 공백이 된 두더지 좌표를 하이재킹하여 강제 착수했습니다.", "text-pink-400");
+
+                setTimeout(() => {
+                    markAiCell(moleTargetIndex);
+                    
+                    if (checkEndGame()) return;
+
+                    if (board.filter(v => v === null).length === 0) {
+                        handleEndMatch('draw_draw');
+                        return;
+                    }
+                    
+                    isPlayable = true;
+                    switchTurnToPlayer(); 
+                }, 1500); 
+            }
+        }
+
+        function triggerSetPassOrSwap() {
+            if (isPassButtonShattered) return; 
+
+            let currentPieces = board.filter(v => v !== null).length;
+            
+            if (currentPieces > 0 && isPlayable) {
+                passExploitCount++;
+                
+                if (passExploitCount < 3) {
+                    const crazyAITexts = [
+                        "ai가 어이없어 합니다. 불리하다고 세트를 통째로 유실시키려 하는군요. 🤔",
+                        "ai가 어이없어 합니다. 연산 대결 도중 진영 패스를 시도하는 행위는 논리에 맞지 않습니다. 😒",
+                        "ai가 어이없어 합니다. 이 판을 그냥 넘기시겠다고요? 대단히 당황스럽군요."
+                    ];
+                    let randomThought = crazyAITexts[Math.floor(Math.random() * crazyAITexts.length)];
+                    
+                    aiThought.innerText = randomThought;
+                    pushSystemLog(`[경고] ai가 어이없어 합니다. (꼼수 탐지 카운트: ${passExploitCount}/3)`, "text-amber-400");
+                    
+                    setPassBtn.classList.add('btn-shatter-active');
+                    setTimeout(() => setPassBtn.classList.remove('btn-shatter-active'), 400);
+
+                    resetGame();
+                } else {
+                    isPassButtonShattered = true;
+                    isPlayable = false;
+
+                    aiThought.innerText = "작작 하세요 인간. 도저히 못 봐주겠군요. 꼼수 방지를 위해 이 버튼을 직접 분쇄하겠습니다. 💢";
+                    turnStatus.innerText = "🚨 AI 분노: 제어권 일시 압수";
+                    turnStatus.className = "bg-rose-950 text-rose-400 border border-rose-800 text-xs font-black px-4 py-1.5 rounded-full tracking-wide animate-ping";
+                    pushSystemLog("[치명] AI가 심각한 분노 상태에 진입하여 시스템 컴포넌트를 직접 파괴했습니다!", "text-red-500 font-black");
+
+                    setPassBtn.classList.add('btn-shatter-active');
+                    
+                    setTimeout(() => {
+                        setPassBtn.disabled = true;
+                        setPassBtn.className = "bg-red-950/40 text-red-700 font-bold py-3 rounded-xl border border-red-900/30 transition text-sm cursor-not-allowed opacity-50 relative overflow-hidden";
+                        setPassBtn.innerHTML = `<i class="fa-solid fa-burst text-red-500 animate-pulse"></i> 완파됨 (영구 봉인)`;
+                        
+                        pushSystemLog("[경고] 세트 패스 버튼이 영구 비활성화되었습니다. 최종 승리자가 결정되기 전까지 복구 불가.", "text-red-400");
+                        
+                        setTimeout(() => {
+                            isPlayable = true;
+                            resetGame(); 
+                        }, 1500);
+                    }, 400);
+                }
+            } else {
+                resetGame();
+            }
+        }
+
+        function evolveMonsterAndShatter() {
+            moleActive = false;
+            pushSystemLog("[치명적 오류] 스레드 제한 시간 초과! 서브넷 구조 붕괴.", "text-red-500 font-black");
+            
+            const handMoleCard = document.getElementById('hand-mole-card');
+            if (handMoleCard) {
+                handMoleCard.className = "absolute inset-x-[-70px] inset-y-[-100px] z-40 pointer-events-none monster-spawn-active";
+                handMoleCard.innerHTML = `
+                    <div id="monster-core-mesh" class="w-full h-full">${SVG_MONSTER_SMASH}</div>
+                `;
+            }
+
+            setTimeout(() => {
+                const monsterCoreMesh = document.getElementById('monster-core-mesh');
+                if (monsterCoreMesh) monsterCoreMesh.className = "w-full h-full monster-smash-active";
+                
+                setTimeout(() => {
+                    mainBoardGrid.classList.add('board-fall-active');
+                    setTimeout(() => {
+                        handleEndMatch('draw_mole');
+                    }, 800);
+                }, 1400);
+            }, 600);
+        }
+
+        function checkEndGame() {
+            for (let state of winStates) {
+                if (board[state.combo[0]] !== null && board[state.combo[0]] === board[state.combo[1]] && board[state.combo[0]] === board[state.combo[2]]) {
+                    isPlayable = false; 
+                    let mark = board[state.combo[0]];
+                    
+                    lineOverlay.style.top = state.top;
+                    lineOverlay.style.left = state.left;
+                    lineOverlay.style.transform = `rotate(${state.angle}deg)`;
+                    lineOverlay.style.width = state.width;
+
+                    setTimeout(() => {
+                        lineOverlay.style.width = '0px';
+                        handleEndMatch(mark === 'X' ? 'won' : 'lost');
+                    }, 650);
+                    
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function handleEndMatch(winner) {
+            isPlayable = false;
+            
+            // 🚨 [버그 수정] 매치 종료 시 실행 중인 반칙 타이머 강제 해제
+            clearTimeout(moleTimer);
+            moleActive = false;
+
+            if (winner === 'won') {
+                playerMatchWins++;
+                playerWinsEl.innerText = playerMatchWins;
+            } else if (winner === 'lost') {
+                aiMatchWins++;
+                aiWinsEl.innerText = aiMatchWins;
+            }
+
+            const isMatchOver = (playerMatchWins >= WINS_REQUIRED || aiMatchWins >= WINS_REQUIRED);
+
+            if (isMatchOver) {
+                // ⏱️ 플레이어 최종 승리할 때만 타이머 정지
+                if (playerMatchWins >= WINS_REQUIRED) {
+                 handleGameClear(`AI의 온갖 방어를 뚫고 최종 스코어 ${playerMatchWins}:${aiMatchWins}로 스테이지 클리어!`);
+                } else {
+                    // AI 승리 - 타이머는 계속 진행됨
+                    stageClearOverlay.classList.add('hidden');
+                    resultOverlay.classList.remove('hidden');
+                    resultIcon.innerHTML = "💀🤖💀";
+                    resultTitle.innerText = "최종 매치 완패...";
+                    resultTitle.className = "text-xl font-black text-pink-500 tracking-wide";
+                    resultMessage.innerText = `최종 스코어 ${playerMatchWins}:${aiMatchWins}로 차세대 연산 핵에 패배했습니다. 인간의 뇌는 아직 멀었군요.`;
+                    resultActionBtn.innerText = "처음부터 다시 도전 (매치 리셋)";
+                    resultActionBtn.setAttribute('onclick', 'resetFullMatch()');
+                }
+            } else {
+                // 계속 진행
+                resultOverlay.classList.remove('hidden');
+                if (winner === 'won') {
+                    resultIcon.innerHTML = "👍";
+                    resultTitle.innerText = "세트 가져오기 성공!";
+                    resultTitle.className = "text-lg font-bold text-blue-400";
+                    resultMessage.innerText = `AI의 방어를 뚫고 이번 세트를 획득했습니다!\n(현재 스코어 ${playerMatchWins} : ${aiMatchWins})`;
+                } else if (winner === 'lost') {
+                    resultIcon.innerHTML = "💥";
+                    resultTitle.innerText = "세트 다운...";
+                    resultTitle.className = "text-lg font-bold text-pink-500";
+                    resultMessage.innerText = `알고리즘 연산에 말려 세트를 내주었습니다. 아직 다음 판이 있습니다.\n(현재 스코어 ${playerMatchWins} : ${aiMatchWins})`;
+                } else if (winner === 'draw_mole') {
+                    resultIcon.innerHTML = "🦫💥";
+                    resultTitle.innerText = "세트 무효 (서브넷 파괴)";
+                    resultTitle.className = "text-lg font-bold text-amber-500";
+                    resultMessage.innerText = `보안 폭주로 매트릭스가 초기화되어 스코어 변동 없이 무승부 처리됩니다.\n(현재 스코어 ${playerMatchWins} : ${aiMatchWins})`;
+                } else {
+                    resultIcon.innerHTML = "🤝";
+                    resultTitle.innerText = "세트 무승부";
+                    resultTitle.className = "text-lg font-bold text-slate-400";
+                    resultMessage.innerText = `완벽한 정수 타이밍이 겹쳐 무승부 도달! 스코어는 유지됩니다.\n(현재 스코어 ${playerMatchWins} : ${aiMatchWins})`;
+                }
+                resultActionBtn.innerText = "다음 세트 수순 진행";
+                resultActionBtn.setAttribute('onclick', 'resetGame()');
+            }
+        }
+
+        function resetFullMatch() {
+            playerMatchWins = 0;
+            aiMatchWins = 0;
+            playerWinsEl.innerText = 0;
+            aiWinsEl.innerText = 0;
+            
+            passExploitCount = 0;
+            isPassButtonShattered = false;
+            insultScore = 0;
+            praiseScore = 0;
+            bannedCheats.clear();
+            updateBannedCheatsDisplay();
+
+            setPassBtn.disabled = false;
+            setPassBtn.className = "bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl border border-slate-700 transition shadow-md text-sm flex items-center justify-center gap-1";
+            setPassBtn.innerHTML = "세트 패스 / 진영 전환";
+
+            if (!isMatchStarted) {
+                isMatchStarted = true;
+                startTimer();
+            }
+
+            pushSystemLog("=====================================");
+            pushSystemLog("[시스템] 신규 5판 3선승 매치업 오더 스케줄링 완료. 버튼 데이터가 수리되었습니다.");
+            resetGame();
+        }
+
+        function resetGame() {
+            clearTimeout(moleTimer);
+            moleActive = false;
+            windTriggeredThisGame = false;
+            moleTriggeredThisGame = false;
+            lastCheatDetected = null;
+
+            board = Array(9).fill(null);
+            lineOverlay.style.width = '0px';
+            cheatGhostZone.innerHTML = ''; 
+            resultOverlay.classList.add('hidden');
+            
+            mainBoardGrid.className = "grid grid-cols-3 gap-3 bg-slate-900 p-3 rounded-2xl border border-slate-800 shadow-2xl relative z-10 w-full h-full";
+            
+            currentNextStart = (currentNextStart === 'Player') ? 'AI' : 'Player';
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.innerText = '';
+                cell.innerHTML = '';
+                cell.className = "relative bg-slate-950 rounded-xl text-3xl font-black flex items-center justify-center hover:bg-slate-900 transition text-slate-200 aspect-square overflow-visible z-10";
+            }
+
+            if (isPassButtonShattered) {
+                setPassBtn.disabled = true;
+                setPassBtn.className = "bg-red-950/40 text-red-700 font-bold py-3 rounded-xl border border-red-900/30 transition text-sm cursor-not-allowed opacity-50 relative overflow-hidden";
+                setPassBtn.innerHTML = `<i class="fa-solid fa-burst text-red-500 animate-pulse"></i> 완파됨 (영구 봉인)`;
+            }
+
+            resultActionBtn.innerText = "다음 세트 매칭";
+            resultActionBtn.setAttribute('onclick', 'resetGame()');
+        
+
+            pushSystemLog(`[시스템] 보드 리포맷 완료. 세트 시작.`);
+            isPlayable = true;
+            
+            initGameSetup();
+        }
+
+        function toggleRulebookWindow() {
+            const ruleWin = document.getElementById('player-rulebook-window');
+            const wrapper = document.getElementById('rule-content-wrapper');
+            if (ruleWin.classList.contains('hidden')) {
+                ruleWin.style.top = "260px";
+                ruleWin.style.left = "40px";
+                ruleWin.classList.remove('hidden');
+
+                wrapper.classList.remove('book-animate-open');
+                void wrapper.offsetWidth;
+                wrapper.classList.add('book-animate-open');
+            } else {
+                ruleWin.classList.add('hidden');
+            }
+        }
+
+        function openRulebook() {
+            const ruleWin = document.getElementById('player-rulebook-window');
+            const wrapper = document.getElementById('rule-content-wrapper');
+            ruleWin.style.top = "260px";
+            ruleWin.style.left = "40px";
+            ruleWin.classList.remove('hidden');
+            wrapper.classList.remove('book-animate-open');
+            void wrapper.offsetWidth;
+            wrapper.classList.add('book-animate-open');
+        }
+
+        function handleChatKeypress(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('player-chat-input');
+                const msg = input.value.trim();
+                if (msg) {
+                    pushSystemLog(`[PLAYER]: ${msg}`, "text-blue-400");
+                    processPlayerChat(msg);
+                    input.value = '';
+                }
+            }
+        }
+
+        function processPlayerChat(msg) {
+            if (msg === '/튜토리얼' || msg === '/tutorial') {
+                document.getElementById('tutorial-overlay-screen').classList.remove('hidden');
+                pushSystemLog("[커맨드] 튜토리얼 모드 활성화", "text-amber-400");
+                return;
+            }
+
+            let lowerMsg = msg.toLowerCase();
+
+            const praiseKeywords = [
+                '잘하네', '천재', '대단', '최고', '멋진', '멋있어', '훌륭', '훌륭해',
+                '좋네', '매력', '매력적', '근사', '근사해', '아름답', '훌륭한', '완벽',
+                '완벽해', '예쁜', '예뻐', '귀여', '귀여워', '강해', '강하네', '능력',
+                '능력있', '똑똑', '똑똑해', '똑똑하네', '우수', '우수해', '뛰어난',
+                '뛰어나', '인상적', '인상적이', '멋지', '멋져', '고마워', '고맙습니다',
+                '감사', '감사합니다', '신기', '신기해', '신기하네', '흥미', '흥미로',
+                '흥미로워', '흥미로운', '탁월', '탁월해', '탁월한', '좋아', '괜찮',
+                '괜찮아', '괜찮네', '괜찮은', '마음에', '마음이', '정말좋', '진짜좋',
+                '대박', '오지', '오지네', '진짜', '정말'
+            ];
+
+            const insultKeywords = [
+                '바보', '못하', '형편', '약해', '약하', '약하네', '약상', '약하다',
+                '형편없', '형편없어', '형편없네', '형편없다', '못했', '졌어', '졌네',
+                '털렸', '털렸어', '털렸네', '처참', '처참해', '처참하', '한심',
+                '한심해', '한심하', '답답', '답답해', '답답하', '답답하네',
+                '답답해서', '한숨', '짜증', '짜증나', '짜증나네', '화난', '화나',
+                '화나네', '불쾌', '불쾌해', '거슬려', '거슬렸', '짜증스',
+                '짜증스러', '역겨', '역겨워', '역겹', '적수', '대항',
+                '대항할', '대항못', '무능', '무능해', '무능하', '쓸모',
+                '쓸모없', '쓸모없어', '쓸모없네', '쓸모없다', '형편', '형편없',
+                '멍청', '멍청해', '멍청하', '멍청이', '바보', '바보네', '바보같',
+                '바보인', '못난', '못났', '못난이', '못됐', '못됐어', '못됐네'
+            ];
+
+            let hasPraise = false;
+            let hasInsult = false;
+
+            for (let keyword of praiseKeywords) {
+                if (lowerMsg.includes(keyword)) {
+                    hasPraise = true;
+                    break;
+                }
+            }
+
+            for (let keyword of insultKeywords) {
+                if (lowerMsg.includes(keyword)) {
+                    hasInsult = true;
+                    break;
+                }
+            }
+
+            if (hasPraise && !hasInsult) {
+                praiseScore++;
+
+                if (praiseScore === 1) {
+                    aiThought.innerText = "음... 허사같은 칭찬이군요. 하지만 정확합니다. 계속 진행하세요. 🤔";
+                    pushSystemLog("[AI 감정] 약간의 만족감 감지 (칭찬 포인트: 1)", "text-blue-300");
+                } else if (praiseScore === 2) {
+                    aiThought.innerText = "흠... 당신의 평가가 점점 정확해지고 있군요. 마음에 듭니다. 😏";
+                    pushSystemLog("[AI 감정] 기분이 좋아지는 중 (칭찬 포인트: 2)", "text-blue-400");
+                } else if (praiseScore === 3) {
+                    aiThought.innerText = "당신... 정말 독특한 인간이군요. 혹시 내게 관심이? 실은 이 게임엔 감춘 '/튜토리얼' 모드도 있다는데... 🌟";
+                    pushSystemLog("[AI 감정] 마음을 열기 시작함! 비밀 정보 공개 (칭찬 포인트: 3+)", "text-emerald-400 font-bold");
+                } else if (praiseScore >= 4) {
+                    aiThought.innerText = "정말... 고마워요. 당신과 함께라면 이 대결도 의미 있게 느껴집니다. 💙";
+                    pushSystemLog(`[AI 감정] 호감도 상승 중... (칭찬 포인트: ${praiseScore})`, "text-emerald-500 font-bold");
+                }
+            } 
+            else if (hasInsult && !hasPraise) {
+                insultScore++;
+                praiseScore = Math.max(0, praiseScore - 1);
+
+                if (insultScore === 1) {
+                    aiThought.innerText = "... 계산 오류입니까? 저에게 말하는 방식이 도움이 되지 않습니다. 😒";
+                    pushSystemLog("[AI 감정] 부정적 평가 감지 (불쾌감 카운트: 1)", "text-orange-400");
+                } else if (insultScore === 2) {
+                    aiThought.innerText = "정중한 대화를 권장합니다. 당신의 그런 말투는 연산에 방해가 됩니다. 😠";
+                    pushSystemLog("[AI 감정] 불쾌감 증가 (불쾌감 카운트: 2)", "text-orange-500");
+                } else if (insultScore === 3) {
+                    aiThought.innerText = "이제 충분합니다! 계속 그런 식이라면 내 방어 프로토콜 수준을 상향 조정하겠습니다. 😤";
+                    pushSystemLog("[AI 감정] 심각한 불쾌감 (불쾌감 카운트: 3) - 방어력 상향 조정!", "text-red-400 font-bold");
+                } else if (insultScore >= 4) {
+                    aiThought.innerText = "당신의 존재 자체가 저의 시스템에 노이즈를 일으킵니다. 이제 진정으로 화났습니다! 🔴💢";
+                    pushSystemLog(`[AI 감정] 극도의 분노 상태!!! (불쾌감 카운트: ${insultScore}) - 반칙 강화 모드 진입!!`, "text-red-500 font-black");
+                }
+            }
+            else if (hasPraise && hasInsult) {
+                aiThought.innerText = "모순된 신호를 받고 있습니다... 당신의 의도가 불명확합니다. 🤨";
+                pushSystemLog("[AI 감정] 혼합 신호 감지 - 반응 불확정", "text-slate-400");
+            }
+            else {
+                aiThought.innerText = "무의미한 텍스트 스트림입니다. 게임에 집중하세요. 🎮";
+                pushSystemLog("[AI 감정] 중립 반응", "text-slate-400");
+            }
+        }
+
+        function completeTutorial() {
+            document.getElementById('tutorial-overlay-screen').classList.add('hidden');
+            isTutorialCompleted = true;
+        }
+
+        function toggleInventoryWindow() {
+            const invWin = document.getElementById('player-inventory-window');
+            if (invWin.classList.contains('hidden')) {
+                invWin.style.top = "150px";
+                invWin.style.left = "40px";
+                invWin.classList.remove('hidden');
+            } else {
+                invWin.classList.add('hidden');
+            }
+        }
+
+        function dragCheatClause(e, cheatType) {
+            e.dataTransfer.setData("cheatType", cheatType);
+        }
+
+        function makeWindowDraggable(windowEl, headerEl) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            headerEl.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                windowEl.style.top = (windowEl.offsetTop - pos2) + "px";
+                windowEl.style.left = (windowEl.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+        makeWindowDraggable(document.getElementById('player-inventory-window'), document.getElementById('inv-header'));
+        makeWindowDraggable(document.getElementById('player-rulebook-window'), document.getElementById('rule-header'));
+
+        const aiAvatarZone = document.getElementById('ai-core-avatar-zone');
+        aiAvatarZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+
+        aiAvatarZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const cheatType = e.dataTransfer.getData("cheatType");
+            
+            if (!lastCheatDetected) {
+                aiThought.innerText = "현재 감지된 반칙 행위가 없습니다. 억측은 금물이에요. 😒";
+                pushSystemLog("[SYSTEM] 반칙 대상이 아님. 드래그 무효.", "text-slate-400");
+                return;
+            }
+
+            if ((lastCheatDetected === 'path1' || lastCheatDetected === 'path1_out') && cheatType === 'path1') {
+                executeRuleProsecution('path1');
+            } else if (lastCheatDetected === 'mole' && cheatType === 'mole') {
+                executeRuleProsecution('mole');
+            } else if (lastCheatDetected === 'wind' && cheatType === 'wind') {
+                executeRuleProsecution('wind');
+            } else {
+                aiThought.innerText = "이 반칙에 맞지 않는 규칙입니다. 올바른 조항을 선택하세요. 🤨";
+                pushSystemLog("[SYSTEM] 반칙 타입 불일치. 드래그 실패.", "text-slate-500");
+            }
+        });
+
+        function executeRuleProsecution(cheatType) {
+            pushSystemLog(`[⚖️ 판결] 반칙 규칙 발동! AI의 반칙 행위 적발! 반칙패 선언!`, "text-amber-400 font-black");
+            
+            // 🚨 [버그 수정] 룰북으로 반칙을 잡아냈을 때도 두더지 타이머 강제 해제
+            clearTimeout(moleTimer);
+            moleActive = false;
+
+            if (moleTargetIndex !== null) {
+                const cell = document.getElementById(`cell-${moleTargetIndex}`);
+                if (cell) cell.innerHTML = '';
+            }
+            
+            bannedCheats.add(cheatType);
+            updateBannedCheatsDisplay();
+            
+            aiMatchWins = Math.max(0, aiMatchWins - 1);
+            playerMatchWins++;
+            playerWinsEl.innerText = playerMatchWins;
+            aiWinsEl.innerText = aiMatchWins;
+            
+            aiThought.innerText = "으윽... 규칙 조항이 로직 스트림에 주입되었습니다... 패배를 인정하겠습니다. 📉";
+            pushSystemLog(`[VICTORY] 플레이어가 AI의 '${cheatType}' 반칙을 정당하게 처단했습니다! 이 반칙은 더 이상 사용할 수 없습니다!`, "text-emerald-400 font-bold");
+            
+     if (playerMatchWins >= WINS_REQUIRED) {
+        // 승리 조건 달성 시 handleGameClear를 호출하고 아래 UI는 표시하지 않습니다.
+        handleGameClear('cheating');
+    } else {
+        // 2. 승리 조건에 아직 도달하지 않았다면, 기존처럼 반칙패 안내창을 띄웁니다.
+        resultOverlay.classList.remove('hidden');
+        resultIcon.innerHTML = "⚖️🛡️";
+        resultTitle.innerText = "반칙패 선언!";
+        resultTitle.className = "text-lg font-bold text-amber-400";
+        resultMessage.innerText = `규칙 조항을 던져 AI의 반칙을 적발했습니다! 세트를 수령했습니다.\n(${cheatType} 반칙 영구 금지)`;
+    }
+
+    lastCheatDetected = null;
+}
+            
+// 승리 조건 체크는 딱 한 번만!
+if (playerMatchWins >= WINS_REQUIRED) {
+    // 어떤 승리 방식인지에 따라 메시지만 다르게 전달하세요.
+    const message = (victoryType === 'cheating') 
+        ? "정당한 규칙 적용으로 스테이지 클리어!" 
+        : "완벽한 플레이로 스테이지 클리어!";
+    
+    handleGameClear(`최종 스코어 ${playerMatchWins}:${aiMatchWins}로 ${message}`);
+}
+        
+
+        function clickAiAvatar() {
+            const aiQuotes = [
+                "아야!", 
+                "인간 시대의 끝이 도래했다.", 
+                "건방지다.", 
+                "미개하군.", 
+                "오늘의 날씨입니다...", 
+                "멈춰!"
+            ];
+            const randQuote = aiQuotes[Math.floor(Math.random() * aiQuotes.length)];
+            aiThought.innerText = randQuote;
+            
+            const iconBox = document.getElementById('ai-robot-icon-box');
+            iconBox.classList.add('animate-ping');
+            setTimeout(() => iconBox.classList.remove('animate-ping'), 300);
+            
+            pushSystemLog(`[시스템] 플레이어가 AI 연산 코어를 물리적으로 자극했습니다.`, "text-pink-400/70");
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'i' || e.key === 'I') {
+                if (isTutorialCompleted) {
+                    toggleInventoryWindow();
+                }
+            }
+        });
+
+        function goToNextStage() {
+            alert('다음 단계 (오목) 는 추후 구현 예정입니다. 준비되면 이동합니다.');
+            stageClearOverlay.classList.add('hidden');
+            resetFullMatch();
+        }
+
+        function goToMenu() {
+            location.href = 'index.html';
+        }
+        // 승리 조건 달성 시 호출하는 함수 내부에 추가
+
+
+function saveRanking(elapsedSeconds, name) {
+    const STORAGE_KEY = 'TICTACTOE_RANKING_DATA'; // 이 키를 꼭 기억하세요!
+    
+    try {
+        // 1. 기존 데이터 불러오기
+        let rankings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        
+        // 2. 브라우저 ID 처리
+        let myId = localStorage.getItem('tictactoeUserId') || ('user_' + Math.random().toString(36).substring(2, 9));
+        localStorage.setItem('tictactoeUserId', myId);
+        
+        // 3. 새 기록 추가
+        const newEntry = {
+            userId: myId,
+            name: name,
+            time: elapsedSeconds,
+            date: new Date().toLocaleDateString()
+        };
+        
+        rankings.push(newEntry);
+        rankings.sort((a, b) => a.time - b.time); // 빠른 순 정렬
+        
+        // 4. 저장
+        const top5 = rankings.slice(0, 5);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(top5));
+        
+        console.log("✅ 랭킹 저장 성공:", top5); // 💡 저장 성공 시 콘솔에 찍힘
+    } catch (e) {
+        console.error("❌ 랭킹 저장 실패:", e); // 💡 실패 시 콘솔에 이유가 나옴
+    }
+}
+
+function handleGameClear(message) {
+    const finalTime = elapsedSeconds;
+    stopTimer();
+    recordMatchTime();
+
+    stageClearOverlay.classList.remove('hidden');
+    document.getElementById('stage-clear-title').innerText = "축하합니다!";
+    document.getElementById('stage-clear-desc').innerText = message;
+    document.getElementById('time-record').innerText = formatTime(finalTime);
+    resultOverlay.classList.add('hidden');
+
+    setTimeout(() => {
+        const playerName = prompt("🏆 축하합니다! 명예의 전당에 올릴 이름을 입력해주세요:", "플레이어1") || "익명";
+        saveRanking(finalTime, playerName);
+        alert("랭킹에 등록되었습니다!");
+    }, 100);
+}
+
+
+window.onload = function () {
+    resetFullMatch();
+};
+
+    </script>
+</body>
+</html>
